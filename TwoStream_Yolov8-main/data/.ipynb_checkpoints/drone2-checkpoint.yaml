@@ -1,0 +1,37 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# COCO8 dataset (first 8 images from COCO train2017) by Ultralytics
+# Documentation: https://docs.ultralytics.com/datasets/detect/coco8/
+# Example usage: yolo train data=coco8.yaml
+# parent
+# ├── ultralytics
+# └── datasets
+#     └── coco8  ← downloads here (1 MB)
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+# path: /home/mjy/ultralytics/datasets/coco8 # dataset root dir
+# train: TwoStream_Yolov8-main\\datasets\\images\\train # train images (relative to 'path') 4 images
+# val: TwoStream_Yolov8-main\\datasets\\images\\val # val images (relative to 'path') 4 images
+# test : TwoStream_Yolov8-main\\datasets\\images\\test
+# # val: /home/mjy/ultralytics/datasets/OBB_Crop/images/test
+# train_ir: TwoStream_Yolov8-main\\datasets\\image\\train # train images (relative to 'path') 4 images
+# val_ir: TwoStream_Yolov8-main\\datasets\\image\\val # val images (relative to 'path') 4 images
+# # val_ir: /home/mjy/ultralytics/datasets/OBB_Crop/image/test
+# test_ir: TwoStream_Yolov8-main\\datasets\\image\\test # test images (optional)
+train: /root/autodl-tmp/TwoStream_Yolov8-main/TwoStream_Yolov8-main/datasets/images/train # train images (relative to 'path') 4 images
+val: /root/autodl-tmp/TwoStream_Yolov8-main/TwoStream_Yolov8-main/datasets/images/val # val images (relative to 'path') 4 images
+test: /root/autodl-tmp/TwoStream_Yolov8-main/TwoStream_Yolov8-main/datasets/images/val
+# val: /home/mjy/ultralytics/datasets/OBB_Crop/images/test
+train_ir: /root/autodl-tmp/TwoStream_Yolov8-main/TwoStream_Yolov8-main/datasets/image/train # train images (relative to 'path') 4 images
+val_ir: /root/autodl-tmp/TwoStream_Yolov8-main/TwoStream_Yolov8-main/datasets/image/val # val images (relative to 'path') 4 images
+# val_ir: /home/mjy/ultralytics/datasets/OBB_Crop/image/test
+test_ir: /root/autodl-tmp/TwoStream_Yolov8-main/TwoStream_Yolov8-main/datasets/images/val # test images (optional)
+# Classes
+names:
+  # 0: people
+  0: car
+  1: truck
+  2: bus
+  3: van
+  4: freight_car
+
+

@@ -1,0 +1,1154 @@
+YOLOv8.0n backbone
+backbone:
+  # [from, repeats, module, args]
+  # RGB
+  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2
+  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4
+  - [-1, 3, C2f, [128, True]] #2
+  - [-1, 1, Conv, [256, 3, 2]] # 3-P3/8
+
+  # IR
+  - [-4, 1, Conv, [64, 3, 2]] # 4 3
+  - [-1, 1, Conv, [128, 3, 2]] # 5
+  - [-1, 3, C2f_Faster, [128, True]] # 6
+  - [-1, 1, Conv, [256, 3, 2]] # 7
+
+  # Fusion1
+  - [-3, 1, RIFusion,  [64]]   #8
+  # - [-1, 1, GateBlock, [64]]  
+  # RGB
+  - [-4, 6, C2f, [256, True]] #9 256
+  - [-1, 1, Conv, [512, 3, 2]] # 10
+ 
+  # IR
+  - [-4, 6, C2f_Faster, [256, True]] # 11
+  - [-1, 1, Conv, [512, 3, 2]] # 12
+ 
+  # Fusion2
+  - [-3,1,RIFusion,[128]]  #13
+  # - [-1,1,GateBlock,[128]]
+  # RGB
+  - [-4, 6, C2f, [512, True]] #14
+  - [-1, 1, Conv, [1024, 3, 2]] # 15
+
+  # IR
+  - [-4, 6, C2f_Faster, [512, True]] #16
+  - [-1, 1, Conv, [1024, 3, 2]] # 17
+
+  # Fusion3
+  - [-3,1,RIFusion,[256]] #18
+  # - [-1,1,GateBlock,[256]]
+  # RGB
+  - [-4, 3, C2f, [1024, True]] #19
+  - [-1, 1, SPPF, [1024, 5]] # 20
+
+  # IR
+  - [-4, 3, C2f_Faster, [1024, True]] #21
+  - [-1, 1, SPPF, [1024, 5]] # 22
+
+  
+  - [[9,11], 1, ADD, [1]] # 23
+  - [[14,16], 1, ADD, [1]] # 24
+  - [[20,22],1, ADD, [1]] # 25
+
+# YOLOv8.0n head
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] #26
+  - [[-1, 24], 1, Concat, [1]] # 27
+  - [-1, 3, C2f, [512]] # 28
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] #29
+  - [[-1, 23], 1, Concat, [1]] # 30
+  - [-1, 3, C2f, [256]] # 31
+
+  - [-1, 1, Conv, [256, 3, 2]] #32
+  - [[-1, 28], 1, Concat, [1]] # 33
+  - [-1, 3, C2f, [512]] # 34
+
+  - [-1, 1, Conv, [512, 3, 2]] # 35
+  - [[-1, 25], 1, Concat, [1]] # 36
+  - [-1, 3, C2f, [1024]] # 37 
+
+  - [[31, 34, 37], 1, Detect, [nc]] # 38
+
+... 保持scales和nc不变
+
+backbone:
+  # [from, repeats, module, args]
+  # RGB
+  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2
+  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4
+  - [-1, 3, C2f, [128, True]] # 2
+  - [-1, 1, Conv, [256, 3, 2]] # 3-P3/8
+
+  # IR
+  - [-4, 1, Conv, [64, 3, 2]] # 4
+  - [-1, 1, Conv, [128, 3, 2]] # 5
+  - [-1, 3, C2f_Faster, [128, True]] # 6
+  - [-1, 1, Conv, [256, 3, 2]] # 7
+
+  # Fusion1 - 分别处理RGB和IR分支
+  - [3, 1, CAFFBlock, [64]]   # 8: 处理RGB分支
+  - [7, 1, CAFFBlock, [64]]   # 9: 处理IR分支
+  - [8, 1, GateBlock, [64]]   # 10: RGB分支门控
+  - [9, 1, GateBlock, [64]]   # 11: IR分支门控
+  
+  # RGB
+  - [10, 6, C2f, [64, True]]  # 12 (输入来自GateBlock输出)
+  - [-1, 1, Conv, [128, 3, 2]] # 13
+
+  # IR
+  - [11, 6, C2f_Faster, [64, True]] # 14 (输入来自GateBlock输出)
+  - [-1, 1, Conv, [128, 3, 2]] # 15
+
+  # Fusion2 - 分别处理RGB和IR分支
+  - [13, 1, CAFFBlock, [128]]  # 16: 处理RGB分支
+  - [15, 1, CAFFBlock, [128]]  # 17: 处理IR分支
+  - [16, 1, GateBlock, [128]]  # 18: RGB分支门控
+  - [17, 1, GateBlock, [128]]  # 19: IR分支门控
+  
+  # RGB
+  - [18, 6, C2f, [128, True]] # 20
+  - [-1, 1, Conv, [256, 3, 2]] # 21
+
+  # IR
+  - [19, 6, C2f_Faster, [128, True]] # 22
+  - [-1, 1, Conv, [256, 3, 2]] # 23
+
+  # Fusion3 - 分别处理RGB和IR分支
+  - [21, 1, CAFFBlock, [256]] # 24: 处理RGB分支
+  - [23, 1, CAFFBlock, [256]] # 25: 处理IR分支
+  - [24, 1, GateBlock, [256]] # 26: RGB分支门控
+  - [25, 1, GateBlock, [256]] # 27: IR分支门控
+  
+  # RGB
+  - [26, 3, C2f, [256, True]] # 28
+  - [-1, 1, SPPF, [256, 5]]   # 29
+
+  # IR
+  - [27, 3, C2f_Faster, [256, True]] # 30
+  - [-1, 1, SPPF, [256, 5]]   # 31
+
+  # 使用增强后的特征进行ADD操作
+  - [[12, 14], 1, ADD, [1]]    # 32: 使用Fusion1后的特征
+  - [[20, 22], 1, ADD, [1]]    # 33: 使用Fusion2后的特征
+  - [[29, 31], 1, ADD, [1]]    # 34: 使用Fusion3后的特征
+
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 35 (输入来自ADD34)
+  - [[-1, 33], 1, Concat, [1]] # 36 (连接35和ADD33)
+  - [-1, 3, C2f, [384, None, 1, False]] # 37
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 38
+  - [[-1, 32], 1, Concat, [1]] # 39 (连接38和ADD32)
+  - [-1, 3, C2f, [192, None, 1, False]] # 40
+
+  - [-1, 1, Conv, [192, 3, 2]] # 41
+  - [[-1, 37], 1, Concat, [1]] # 42
+  - [-1, 3, C2f, [384, None, 1, False]] # 43
+
+  - [-1, 1, Conv, [384, 3, 2]] # 44
+  - [[-1, 34], 1, Concat, [1]] # 45
+  - [-1, 3, C2f, [768, None, 1, False]] # 46
+
+  - [[40, 43, 46], 1, Detect, [nc, [192, 384, 768]]] # 47
+
+
+
+
+
+YOLOv8 TwoStream with EMA - 修复版本
+基于原始索引结构，只在安全位置添加EMA
+
+backbone:
+  # [from, repeats, module, args]
+  # RGB
+  - [-1, 1, Conv, [64, 3, 2]]            # 0
+  - [-1, 1, Conv, [128, 3, 2]]           # 1
+  - [-1, 3, C2f, [128, True]]            # 2
+  - [-1, 1, Conv, [256, 3, 2]]           # 3
+
+  # IR
+  - [-4, 1, Conv, [64, 3, 2]]            # 4
+  - [-1, 1, Conv, [128, 3, 2]]           # 5
+  - [-1, 3, C2f_Faster, [128, True]]     # 6
+  - [-1, 1, Conv, [256, 3, 2]]           # 7
+
+  # Fusion1
+  - [-3, 1, CAFFBlock, [64]]             # 8
+  - [-1, 1, GateBlock, [64]]             # 9
+  - [-4, 6, C2f, [256, True]]            # 10
+  - [-1, 1, Conv, [512, 3, 2]]           # 11
+  - [-4, 6, C2f_Faster, [256, True]]     # 12
+  - [-1, 1, Conv, [512, 3, 2]]           # 13
+
+  # Fusion2
+  - [-3, 1, CAFFBlock, [128]]            # 14
+  - [-1, 1, GateBlock, [128]]            # 15
+  - [-4, 6, C2f, [512, True]]            # 16
+  - [-1, 1, Conv, [1024, 3, 2]]          # 17
+  - [-4, 6, C2f_Faster, [512, True]]     # 18
+  - [-1, 1, Conv, [1024, 3, 2]]          # 19
+
+  # Fusion3
+  - [-3, 1, RIFusion, [256]]             # 20
+  - [-1, 1, GateBlock, [256]]            # 21
+  - [-4, 3, C2f, [1024, True]]           # 22
+  - [-1, 1, SPPF, [1024, 5]]             # 23
+  - [-4, 3, C2f_Faster, [1024, True]]    # 24
+  - [-1, 1, SPPF, [1024, 5]]             # 25
+
+  # ADD 残差
+  - [[10, 12], 1, ADD, [1]]              # 26
+  - [[16, 18], 1, ADD, [1]]              # 27
+  - [[23, 25], 1, ADD, [1]]              # 28
+
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 29
+  - [[-1, 27], 1, Concat, [1]]                 # 30
+  - [-1, 3, C2f, [512]]                        # 31
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 32
+  - [[-1, 26], 1, Concat, [1]]                 # 33
+  - [-1, 3, C2f, [256]]                        # 34
+
+  - [-1, 1, Conv, [256, 3, 2]]                 # 35
+  - [[-1, 31], 1, Concat, [1]]                 # 36
+  - [-1, 3, C2f, [512]]                        # 37
+
+  - [-1, 1, Conv, [512, 3, 2]]                 # 38
+  - [[-1, 28], 1, Concat, [1]]                 # 39
+  - [-1, 3, C2f, [1024]]                       # 40
+
+  # —— 在原 34、37、40 层后各插入一次 EMA ——  
+  - [34,   1, EMA, [256, 8]]                   # EMA on P3
+  - [37,   1, EMA, [512, 8]]                   # EMA on P4
+  - [40,   1, EMA, [1024, 8]]                  # EMA on P5
+
+  # —— Detect 保持原来的输入索引 ——  
+  - [[34, 37, 40], 1, Detect, [nc]]            # 41
+
+backbone:
+  # [from, repeats, module, args]
+  # RGB
+  - [-1, 1, Conv, [64, 3, 2]] # 0-P1/2
+  - [-1, 1, Conv, [128, 3, 2]] # 1-P2/4
+  - [-1, 3, C2f, [128, True]] # 2
+  - [-1, 1, Conv, [256, 3, 2]] # 3-P3/8
+
+  # IR
+  - [-4, 1, Conv, [64, 3, 2]] # 4
+  - [-1, 1, Conv, [128, 3, 2]] # 5
+  - [-1, 3, C2f_Faster, [128, True]] # 6
+  - [-1, 1, Conv, [256, 3, 2]] # 7
+
+  # Fusion1
+  - [-3, 1, CAFFBlock, [64]]    # 8
+  - [-1, 1, GateBlock, [64]]   # 9 (新增)
+  # RGB
+  - [-4, 6, C2f, [256, True]] # 10 (原索引9)
+  - [-1, 1, Conv, [512, 3, 2]] # 11 (原索引10)
+
+  # IR
+  - [-4, 6, C2f_Faster, [256, True]] # 12 (原索引11)
+  - [-1, 1, Conv, [512, 3, 2]] # 13 (原索引12)
+
+  # Fusion2
+  - [-3, 1, CAFFBlock, [128]]  #14 (原索引13)
+  - [-1, 1, GateBlock, [128]]  #15 (新增)
+  # RGB
+  - [-4, 6, C2f, [512, True]] # 16 (原索引14)
+  - [-1, 1, Conv, [1024, 3, 2]] #17 (原索引15)
+
+  # IR
+  - [-4, 6, C2f_Faster, [512, True]] #18 (原索引16)
+  - [-1, 1, Conv, [1024, 3, 2]] #19 (原索引17)
+
+  # Fusion3
+  - [-3, 1, RIFusion, [256]] #20 (原索引18)
+  - [-1, 1, GateBlock, [256]] #21 (新增)
+  # RGB
+  - [-4, 3, C2f, [1024, True]] #22 (原索引19)
+  - [-1, 1, SPPF, [1024, 5]] #23 (原索引20)
+
+  # IR
+  - [-4, 3, C2f_Faster, [1024, True]] #24 (原索引21)
+  - [-1, 1, SPPF, [1024, 5]] #25 (原索引22)
+
+  # 调整ADD的层索引
+  - [[10, 12], 1, ADD, [1]] #26 (原23，现引用调整后的10和12)
+  - [[16, 18], 1, ADD, [1]] #27 (原24，现引用16和18)
+  - [[23, 25], 1, ADD, [1]] #28 (原25，现引用23和25)
+
+head:
+  # 第一层上采样 (P5 -> P4)
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  #29 
+  - [[-1, 27], 1, Concat, [1]]  #30  # 融合ADD27(P4)
+  - [-1, 3, C2f, [512]]  #31
+  
+  # 第二层上采样 (P4 -> P3)
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  #32
+  - [[-1, 26], 1, Concat, [1]]  #33  # 融合ADD26(P3)
+  - [-1, 3, C2f, [256]]  #34
+  
+  # ==== 新增小目标检测分支 ====
+  # 第三层上采样 (P3 -> P2)
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  #35  # 2倍上采样
+  - [[-1, 2], 1, Concat, [1]]  #36  # 融合backbone第2层(下采样4倍)
+  - [-1, 3, C2f, [128]]  #37  # P2/4特征图
+  
+  # 下采样路径 (P3 -> P4)
+  - [34, 1, Conv, [256, 3, 2]]  #38
+  - [[-1, 31], 1, Concat, [1]]  #39
+  - [-1, 3, C2f, [512]]  #40  # P4/16
+  
+  # # 下采样路径 (P4 -> P5)
+  # - [40, 1, Conv, [512, 3, 2]]  #41
+  # - [[-1, 28], 1, Concat, [1]]  #42  # 融合ADD28(P5)
+  # - [-1, 3, C2f, [1024]]  #43  # P5/32
+  
+  # 四尺度检测头 (P2/4, P3/8, P4/16, P5/32)
+  - [[37, 34, 40], 1, Detect, [nc]]  #44  # 小目标优化关键
+  # #############################
+# import torch
+# from torch import nn
+# from timm.models.layers import trunc_normal_
+
+
+# class CAFFBlock(nn.Module):
+#     def __init__(self, c1, r=16, dimension=1):
+#         """
+#         Robust drop-in replacement for RIFusion that adapts to input dimensions
+#         c1: Expected to be single path channel count but will be auto-adjusted
+#         r: reduction ratio (same as in RIFusion)
+#         dimension: kept for compatibility
+#         """
+#         super().__init__()
+#         self.c1 = c1  # This will be dynamically set in forward
+#         self.r = r    # Reduction ratio
+        
+#         # We'll create the attention modules dynamically based on actual input channels
+#         self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        
+#         # Initialize parameters will be done in first forward pass
+#         self.fc = None
+#         self.initialized = False
+        
+#     def _initialize(self, channels):
+#         """Initialize components based on actual input channels"""
+#         self.c1 = channels // 2  # Actual channels per path
+#         self.total_c = channels
+        
+#         # Create the channel attention module
+#         self.fc = nn.Sequential(
+#             nn.Linear(self.total_c, self.total_c // self.r, bias=False),
+#             nn.ReLU(inplace=True),
+#             nn.Linear(self.total_c // self.r, self.total_c, bias=False),
+#             nn.Sigmoid()
+#         )
+        
+#         # Initialize weights
+#         for m in self.modules():
+#             if isinstance(m, nn.Linear):
+#                 trunc_normal_(m.weight, std=.02)
+                
+#         self.initialized = True
+
+#     def forward(self, x):
+#         """
+#         x: Input tensor with shape [B, C, H, W] where C is dynamically determined
+#         Returns: Output tensor with same shape as input
+#         """
+#         b, c, h, w = x.shape
+        
+#         # Initialize components on first forward pass if needed
+#         if not self.initialized:
+#             self._initialize(c)
+        
+#         # Split the input into two equal halves
+#         feat_v = x[:, :self.c1]         # First half channels
+#         feat_i = x[:, self.c1:2*self.c1]  # Second half channels
+        
+#         # If there are extra channels beyond 2*c1, we'll preserve them
+#         extra_channels = None
+#         if c > 2*self.c1:
+#             extra_channels = x[:, 2*self.c1:]
+        
+#         # Exactly like RIFusion's attention mechanism:
+#         # 1. Generate attention weights
+#         y = self.avg_pool(x[:, :2*self.c1]).view(b, 2*self.c1)
+#         y = self.fc(y).view(b, 2*self.c1, 1, 1)
+        
+#         # 2. Apply attention
+#         attended = x[:, :2*self.c1] * y
+        
+#         # 3. Split again for the cross-channel fusion
+#         v_out = attended[:, :self.c1]
+#         i_out = attended[:, self.c1:2*self.c1]
+        
+#         # 4. Cross-channel fusion (exactly like RIFusion)
+#         fused = torch.cat([i_out, v_out], dim=1)
+        
+#         # 5. Add residual connection
+#         output = x[:, :2*self.c1] + fused
+        
+#         # 6. Add back any extra channels if they existed
+#         if extra_channels is not None:
+#             output = torch.cat([output, extra_channels], dim=1)
+            
+#         return output
+
+# import torch
+# import torch.nn as nn
+# import torch.nn.functional as F
+# from timm.models.layers import trunc_normal_
+
+# class CAFFBlock(nn.Module):最好
+#     def __init__(self, c1, c2=None, r=16, dimension=1,*args):
+#         """
+#         改进的 Cross-Attention Fusion 模块
+#         Args:
+#             c1 (int): 输入通道数
+#             c2 (int): 输出通道数，如果为None则等于c1
+#             r (int): 通道缩减比
+#             dimension (int): 保持兼容性
+#         """
+#         super().__init__()
+#         self.r = r
+#         self.dimension = dimension
+        
+#         # 延迟初始化标记
+#         self.avg_pool = nn.AdaptiveAvgPool2d(1)
+#         self.fc = None
+#         self.spatial_conv = None
+#         self.cross_attn = None
+#         self.output_proj = None
+#         self.initialized = False
+    
+#     def _initialize(self, channels):
+#         """动态初始化"""
+#         self.total_c = channels
+        
+#         # 确保通道数合理分割
+#         self.c1 = channels // 2 if channels % 2 == 0 else (channels + 1) // 2
+#         self.c2 = channels - self.c1
+        
+#         # 1. 通道注意力 - 使用单独的avg和max分支
+#         self.fc_avg = nn.Sequential(
+#             nn.Linear(self.total_c, self.total_c // self.r, bias=False),
+#             nn.ReLU(inplace=True),
+#             nn.Linear(self.total_c // self.r, self.total_c, bias=False)
+#         )
+        
+#         self.fc_max = nn.Sequential(
+#             nn.Linear(self.total_c, self.total_c // self.r, bias=False),
+#             nn.ReLU(inplace=True),
+#             nn.Linear(self.total_c // self.r, self.total_c, bias=False)
+#         )
+        
+#         # 2. 空间注意力
+#         self.spatial_conv = nn.Sequential(
+#             nn.Conv2d(2, 1, kernel_size=7, padding=3, bias=False),
+#             nn.BatchNorm2d(1),
+#             nn.Sigmoid()
+#         )
+        
+#         # 3. 交叉注意力融合
+#         self.cross_attn = nn.MultiheadAttention(
+#             embed_dim=min(self.c1, self.c2),
+#             num_heads=4,
+#             dropout=0.1,
+#             batch_first=True
+#         )
+        
+#         # 4. 输出投影
+#         self.output_proj = nn.Conv2d(
+#             self.c1 + self.c2, 
+#             self.total_c, 
+#             kernel_size=1, 
+#             bias=False
+#         )
+        
+#         # 5. 残差连接的权重
+#         self.alpha = nn.Parameter(torch.ones(1) * 0.5)
+        
+#         # 权重初始化
+#         self._init_weights()
+#         self.initialized = True
+    
+#     def _init_weights(self):
+#         """权重初始化"""
+#         for m in self.modules():
+#             if isinstance(m, nn.Linear):
+#                 trunc_normal_(m.weight, std=.02)
+#                 if m.bias is not None:
+#                     nn.init.constant_(m.bias, 0)
+#             elif isinstance(m, nn.Conv2d):
+#                 trunc_normal_(m.weight, std=.02)
+#                 if m.bias is not None:
+#                     nn.init.constant_(m.bias, 0)
+#             elif isinstance(m, nn.BatchNorm2d):
+#                 nn.init.constant_(m.weight, 1)
+#                 nn.init.constant_(m.bias, 0)
+    
+#     def forward(self, x):
+#         b, c, h, w = x.shape
+        
+#         if not self.initialized:
+#             self._initialize(c)
+        
+        
+        # # 1. 通道注意力
+        # ch_avg = self.avg_pool(x).view(b, c)
+        # ch_max = F.adaptive_max_pool2d(x, 1).view(b, c)
+        
+        # ch_attn_avg = self.fc_avg(ch_avg)
+        # ch_attn_max = self.fc_max(ch_max)
+        # ch_attn = torch.sigmoid(ch_attn_avg + ch_attn_max).view(b, c, 1, 1)
+        
+        # x_ch = x * ch_attn
+        
+        # # 2. 空间注意力
+        # sp_avg = x_ch.mean(dim=1, keepdim=True)
+        # sp_max = x_ch.max(dim=1, keepdim=True)[0]
+        # sp_concat = torch.cat([sp_avg, sp_max], dim=1)
+        # sp_attn = self.spatial_conv(sp_concat)
+        
+        # x_sp = x_ch * sp_attn
+        
+        # # 3. 特征分割
+        # feat_1 = x_sp[:, :self.c1]  # [B, C1, H, W]
+        # feat_2 = x_sp[:, self.c1:self.c1+self.c2]  # [B, C2, H, W]
+        
+        # # 4. 交叉注意力融合（如果通道数匹配）
+        # if self.c1 == self.c2:
+        #     # 将特征图reshape为序列进行attention
+        #     feat_1_seq = feat_1.flatten(2).transpose(1, 2)  # [B, HW, C1]
+        #     feat_2_seq = feat_2.flatten(2).transpose(1, 2)  # [B, HW, C2]
+            
+        #     # 交叉注意力
+        #     feat_1_attn, _ = self.cross_attn(feat_1_seq, feat_2_seq, feat_2_seq)
+        #     feat_2_attn, _ = self.cross_attn(feat_2_seq, feat_1_seq, feat_1_seq)
+            
+        #     # 重新reshape回特征图
+        #     feat_1_attn = feat_1_attn.transpose(1, 2).view(b, self.c1, h, w)
+        #     feat_2_attn = feat_2_attn.transpose(1, 2).view(b, self.c2, h, w)
+            
+        #     # 残差连接
+        #     feat_1 = feat_1 + feat_1_attn
+        #     feat_2 = feat_2 + feat_2_attn
+        
+        # # 5. 特征融合
+        # fused = torch.cat([feat_1, feat_2], dim=1)
+        
+        # # 6. 输出投影
+        # out = self.output_proj(fused)
+        
+        # # 7. 残差连接
+        # out = self.alpha * out + (1 - self.alpha) * x
+        
+        # return out
+class CAFFBlock(nn.Module):
+    def __init__(self, dummy_arg=0,a=0,b=1):  # 接受虚拟参数
+        super().__init__()
+        # 保持原有实现不变
+        self.r = 16  # 默认值
+        self.dimension = 1  # 默认值
+        self.initialized = False
+        print("CAFFBlock initialized with dynamic channels")
+
+    def _initialize(self, channels):
+        """动态初始化并创建所有层"""
+        if self.initialized:  # 防止重复初始化
+            return
+            
+        self.total_c = channels
+        # 确保通道数合理分割
+        self.c1 = channels // 2 if channels % 2 == 0 else (channels + 1) // 2
+        self.c2 = channels - self.c1
+        
+        # 1. 通道注意力 - 使用单独的avg和max分支
+        self.fc_avg = nn.Sequential(
+            nn.Linear(self.total_c, self.total_c // self.r, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.total_c // self.r, self.total_c, bias=False)
+        )
+        
+        self.fc_max = nn.Sequential(
+            nn.Linear(self.total_c, self.total_c // self.r, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(self.total_c // self.r, self.total_c, bias=False)
+        )
+        
+        # 2. 空间注意力
+        self.spatial_conv = nn.Sequential(
+            nn.Conv2d(2, 1, kernel_size=7, padding=3, bias=False),
+            nn.BatchNorm2d(1),
+            nn.Sigmoid()
+        )
+        
+        # 3. 交叉注意力融合
+        self.cross_attn = nn.MultiheadAttention(
+            embed_dim=min(self.c1, self.c2),
+            num_heads=4,
+            dropout=0.1,
+            batch_first=True
+        ) if min(self.c1, self.c2) > 0 else None
+        
+        # 4. 输出投影
+        self.output_proj = nn.Conv2d(
+            self.c1 + self.c2, 
+            self.total_c, 
+            kernel_size=1, 
+            bias=False
+        )
+        
+        # 5. 残差连接的权重
+        self.alpha = nn.Parameter(torch.ones(1) * 0.5)
+        
+        # 权重初始化
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                trunc_normal_(m.weight, std=.02)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Conv2d):
+                trunc_normal_(m.weight, std=.02)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+                
+        self.initialized = True
+
+    def forward(self, x):
+        if not hasattr(self, 'initialized') or not self.initialized:
+            b, c, h, w = x.shape
+            self._initialize(c)
+        
+        # 1. 通道注意力
+        ch_avg = self.avg_pool(x).view(b, c)
+        ch_max = F.adaptive_max_pool2d(x, 1).view(b, c)
+        
+        ch_attn_avg = self.fc_avg(ch_avg)
+        ch_attn_max = self.fc_max(ch_max)
+        ch_attn = torch.sigmoid(ch_attn_avg + ch_attn_max).view(b, c, 1, 1)
+        
+        x_ch = x * ch_attn
+        
+        # 2. 空间注意力
+        sp_avg = x_ch.mean(dim=1, keepdim=True)
+        sp_max = x_ch.max(dim=1, keepdim=True)[0]
+        sp_concat = torch.cat([sp_avg, sp_max], dim=1)
+        sp_attn = self.spatial_conv(sp_concat)
+        
+        x_sp = x_ch * sp_attn
+        
+        # 3. 特征分割
+        feat_1 = x_sp[:, :self.c1]  # [B, C1, H, W]
+        feat_2 = x_sp[:, self.c1:self.c1+self.c2]  # [B, C2, H, W]
+        
+        # 4. 交叉注意力融合（如果通道数匹配）
+        if self.c1 == self.c2:
+            # 将特征图reshape为序列进行attention
+            feat_1_seq = feat_1.flatten(2).transpose(1, 2)  # [B, HW, C1]
+            feat_2_seq = feat_2.flatten(2).transpose(1, 2)  # [B, HW, C2]
+            
+            # 交叉注意力
+            feat_1_attn, _ = self.cross_attn(feat_1_seq, feat_2_seq, feat_2_seq)
+            feat_2_attn, _ = self.cross_attn(feat_2_seq, feat_1_seq, feat_1_seq)
+            
+            # 重新reshape回特征图
+            feat_1_attn = feat_1_attn.transpose(1, 2).view(b, self.c1, h, w)
+            feat_2_attn = feat_2_attn.transpose(1, 2).view(b, self.c2, h, w)
+            
+            # 残差连接
+            feat_1 = feat_1 + feat_1_attn
+            feat_2 = feat_2 + feat_2_attn
+        
+        # 5. 特征融合
+        fused = torch.cat([feat_1, feat_2], dim=1)
+        
+        # 6. 输出投影
+        out = self.output_proj(fused)
+        
+        # 7. 残差连接
+        out = self.alpha * out + (1 - self.alpha) * x
+        
+        return out
+
+# class GateBlock(nn.Module):最好
+#     def __init__(self, c1, temp=1.0, eps=1e-10,*args):
+#         """
+#         Simplified and stable dynamic channel gating module
+        
+#         Args:
+#             c1: Input channels (as specified in YAML config) - will be ignored, auto-detected
+#             temp: Gumbel-Softmax temperature (lower = harder selection)
+#             eps: Small constant for numerical stability
+#         """
+#         super().__init__()
+#         # Store parameters
+#         self.temp = temp
+#         self.eps = eps
+        
+#         # 不预先创建任何需要通道数的层，全部在forward中动态创建
+#         self.avg_pool = nn.AdaptiveAvgPool2d(1)
+#         self.linear_layers = nn.ModuleDict()
+#         self.alpha = nn.Parameter(torch.tensor(0.8)) 
+#         self.current_channels = {}
+        
+#         print(f"GateBlock initialized (dynamic channels)")
+    
+#     def _get_or_create_linear(self, channels, device):
+#         """动态获取或创建线性层"""
+#         key = str(channels)
+#         if key not in self.linear_layers:
+#             linear = nn.Linear(channels, channels).to(device)
+#             # 初始化权重
+#             nn.init.xavier_uniform_(linear.weight)
+#             nn.init.zeros_(linear.bias)
+#             self.linear_layers[key] = linear
+#             print(f"Created linear layer for {channels} channels")
+#         return self.linear_layers[key]
+    
+#     def forward(self, x):
+#         """
+#         Simplified forward pass with automatic channel detection
+        
+#         Args:
+#             x: Input tensor or list of tensors
+            
+#         Returns:
+#             Gated features with same shape as input
+#         """
+#         # 处理列表输入（来自ADD操作）
+#         if isinstance(x, list):
+#             # 如果是ADD操作的结果，通常第一个元素是结果
+#             if len(x) == 1:
+#                 return self._process_tensor(x[0])
+            
+#             # 简单的张量融合 - 确保维度匹配
+#             target_tensor = x[0]
+#             for tensor in x[1:]:
+#                 if tensor.shape == target_tensor.shape:
+#                     target_tensor = target_tensor + tensor
+#                 else:
+#                     # 如果维度不匹配，使用插值对齐
+#                     tensor_resized = F.interpolate(
+#                         tensor, 
+#                         size=target_tensor.shape[2:], 
+#                         mode='bilinear', 
+#                         align_corners=False
+#                     )
+#                     target_tensor = target_tensor + tensor_resized
+            
+#             return self._process_tensor(target_tensor)
+        
+#         return self._process_tensor(x)
+    
+#     def _process_tensor(self, x):
+#         """简化的张量处理"""
+#         B, C, H, W = x.shape
+#         device = x.device
+        
+#         # 1. 池化
+#         pooled = self.avg_pool(x)
+#         flattened = pooled.view(B, C)
+        
+#         # 2. 动态线性层
+#         linear = self._get_or_create_linear(C, device)
+        
+#         # 3. 门控权重
+#         gate_weights = torch.sigmoid(linear(flattened))
+        
+#         # 4. 训练噪声
+#         if self.training:
+#             noise = torch.randn_like(gate_weights) * 0.01
+#             gate_weights = torch.clamp(gate_weights + noise, 0, 1)
+        
+#         # 5. 应用门控
+#         gate_weights = gate_weights.view(B, C, 1, 1)
+#         gated_output = x * gate_weights
+        
+#         # 6. 可学习残差连接
+#         output = torch.sigmoid(self.alpha) * gated_output + (1 - torch.sigmoid(self.alpha)) * x
+#         return output
+class GateBlock(nn.Module):
+    def __init__(self, dummy_arg=0,a=0,b=1):  # 接受虚拟参数
+        super().__init__()
+        # Store parameters
+        self.temp = 1.0
+        self.eps = 1e-10
+        
+        # 使用延迟初始化
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.linear_layers = nn.ModuleDict()
+        self.alpha = nn.Parameter(torch.tensor(0.8))
+        self.initialized = False  # 添加初始化标志
+        print("GateBlock initialized (dynamic channels)")
+
+    def _initialize(self, channels):
+        """动态初始化并创建线性层"""
+        if self.initialized:  # 防止重复初始化
+            return
+            
+        key = str(channels)
+        if key not in self.linear_layers:
+            linear = nn.Linear(channels, channels)
+            # 初始化权重
+            nn.init.xavier_uniform_(linear.weight)
+            nn.init.zeros_(linear.bias)
+            self.linear_layers[key] = linear
+            print(f"Created linear layer for {channels} channels")
+        
+        self.initialized = True
+
+    def forward(self, x):
+        # 处理列表输入（来自ADD操作）
+        if isinstance(x, list):
+            # 如果是ADD操作的结果，通常第一个元素是结果
+            if len(x) == 1:
+                x = x[0]
+            else:
+                # 简单的张量融合 - 确保维度匹配
+                target_tensor = x[0]
+                for tensor in x[1:]:
+                    if tensor.shape == target_tensor.shape:
+                        target_tensor = target_tensor + tensor
+                    else:
+                        # 如果维度不匹配，使用插值对齐
+                        tensor_resized = F.interpolate(
+                            tensor, 
+                            size=target_tensor.shape[2:], 
+                            mode='bilinear', 
+                            align_corners=False
+                        )
+                        target_tensor = target_tensor + tensor_resized
+                x = target_tensor
+        
+        B, C, H, W = x.shape
+        device = x.device
+        
+        # 确保在运行时初始化
+        if not hasattr(self, 'initialized') or not self.initialized:
+            self._initialize(C)
+        
+        # 1. 池化
+        pooled = self.avg_pool(x)
+        flattened = pooled.view(B, C)
+        
+        # 2. 动态线性层
+        key = str(C)
+        linear = self.linear_layers[key].to(device)
+        
+        # 3. 门控权重
+        gate_weights = torch.sigmoid(linear(flattened))
+        
+        # 4. 训练噪声
+        if self.training:
+            noise = torch.randn_like(gate_weights) * 0.01
+            gate_weights = torch.clamp(gate_weights + noise, 0, 1)
+        
+        # 5. 应用门控
+        gate_weights = gate_weights.view(B, C, 1, 1)
+        gated_output = x * gate_weights
+        
+        # 6. 可学习残差连接
+        output = torch.sigmoid(self.alpha) * gated_output + (1 - torch.sigmoid(self.alpha)) * x
+        return output
+
+
+# class GateBlock(nn.Module):
+#     def __init__(self, c1, temp=1.0, eps=1e-10):
+#         """
+#         Dynamic channel gating module that preserves spatial dimensions
+        
+#         Args:
+#             c1: Input channels (as specified in YAML config)
+#             temp: Gumbel-Softmax temperature (lower = harder selection)
+#             eps: Small constant for numerical stability
+#         """
+#         super().__init__()
+#         # Store parameters
+#         self.temp = temp
+#         self.eps = eps
+        
+#         # Create a placeholder for the actual channel count
+#         self.channels = c1
+        
+#         # We'll create the linear layer in first forward pass
+#         self.avg_pool = nn.AdaptiveAvgPool2d(1)
+#         self.linear = None
+#         self.initialized = False
+    
+#     def _initialize(self, c):
+#         """Initialize the linear layer with the correct dimensions"""
+#         self.channels = c
+#         self.linear = nn.Linear(c, c)
+#         self.initialized = True
+#         print(f"GateBlock initialized with {c} channels")
+    
+#     def forward(self, x):
+#         """
+#         Apply dynamic channel gating
+        
+#         Args:
+#             x: Input tensor or list of tensors
+            
+#         Returns:
+#             Gated features with same shape as input
+#         """
+#         # Check if input is a list (from ADD operation)
+#         if isinstance(x, list):
+#             # Debug print
+#             print(f"GateBlock received list input with shapes: {[t.shape for t in x]}")
+            
+#             # If it's from an ADD operation, the result is already in x[0]
+#             if len(x) == 1:
+#                 return self._process_tensor(x[0])
+            
+#             # Otherwise, we need to apply gating to the sum
+#             # First, ensure all tensors have same spatial dimensions
+#             target_h = max(tensor.shape[2] for tensor in x)
+#             target_w = max(tensor.shape[3] for tensor in x)
+            
+#             # Resize tensors if needed
+#             resized_tensors = []
+#             for tensor in x:
+#                 if tensor.shape[2] != target_h or tensor.shape[3] != target_w:
+#                     resized = torch.nn.functional.interpolate(
+#                         tensor,
+#                         size=(target_h, target_w),
+#                         mode='bilinear',
+#                         align_corners=False
+#                     )
+#                     resized_tensors.append(resized)
+#                 else:
+#                     resized_tensors.append(tensor)
+            
+#             # Sum the resized tensors
+#             summed = torch.add(resized_tensors[0], resized_tensors[1])
+#             for i in range(2, len(resized_tensors)):
+#                 summed = torch.add(summed, resized_tensors[i])
+            
+#             # Apply gating to the sum
+#             return self._process_tensor(summed)
+#         else:
+#             # Standard case - single tensor
+#             return self._process_tensor(x)
+    
+#     def _process_tensor(self, x):
+#         """Apply gating to a single tensor"""
+#         B, C, H, W = x.shape
+        
+#         # Initialize on first forward if needed
+#         if not self.initialized or C != self.channels:
+#             self._initialize(C)
+        
+#         # 1. Pool and flatten features
+#         pooled = self.avg_pool(x)  # (B, C, 1, 1)
+#         flattened = pooled.view(B, C)  # (B, C)
+        
+#         # 2. Generate logits for each channel
+#         logits = self.linear(flattened)  # (B, C)
+        
+#         # 3. Add Gumbel noise for exploration
+#         gumbels = -torch.empty_like(logits).exponential_().log()
+#         gumbels = gumbels.clamp(min=-30, max=30)  # For numerical stability
+        
+#         # 4. Apply Gumbel-Softmax with sigmoid for binary gating
+#         y = (logits + gumbels) / self.temp
+#         gate = torch.sigmoid(y)  # (B, C)
+        
+#         # 5. Reshape to [B, C, 1, 1] for broadcasting multiplication
+#         gate = gate.view(B, C, 1, 1)
+        
+#         # 6. Apply gate to input features
+#         return x * gate
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# class GateBlock(nn.Module):
+#     def __init__(self, c1, temp=1.0, eps=1e-10):
+#         """
+#         Simplified and stable dynamic channel gating module
+        
+#         Args:
+#             c1: Input channels (as specified in YAML config) - will be ignored, auto-detected
+#             temp: Gumbel-Softmax temperature (lower = harder selection)
+#             eps: Small constant for numerical stability
+#         """
+#         super().__init__()
+#         # Store parameters
+#         self.temp = temp
+#         self.eps = eps
+        
+#         # 不预先创建任何需要通道数的层，全部在forward中动态创建
+#         self.avg_pool = nn.AdaptiveAvgPool2d(1)
+#         self.linear_layers = nn.ModuleDict()
+#         self.alpha = nn.Parameter(torch.tensor(0.8)) 
+#         self.current_channels = {}
+        
+#         print(f"GateBlock initialized (dynamic channels)")
+    
+#     def _get_or_create_linear(self, channels, device):
+#         """动态获取或创建线性层"""
+#         key = str(channels)
+#         if key not in self.linear_layers:
+#             linear = nn.Linear(channels, channels).to(device)
+#             # 初始化权重
+#             nn.init.xavier_uniform_(linear.weight)
+#             nn.init.zeros_(linear.bias)
+#             self.linear_layers[key] = linear
+#             print(f"Created linear layer for {channels} channels")
+#         return self.linear_layers[key]
+    
+#     def forward(self, x):
+#         """
+#         Simplified forward pass with automatic channel detection
+        
+#         Args:
+#             x: Input tensor or list of tensors
+            
+#         Returns:
+#             Gated features with same shape as input
+#         """
+#         # 处理列表输入（来自ADD操作）
+#         if isinstance(x, list):
+#             # 如果是ADD操作的结果，通常第一个元素是结果
+#             if len(x) == 1:
+#                 return self._process_tensor(x[0])
+            
+#             # 简单的张量融合 - 确保维度匹配
+#             target_tensor = x[0]
+#             for tensor in x[1:]:
+#                 if tensor.shape == target_tensor.shape:
+#                     target_tensor = target_tensor + tensor
+#                 else:
+#                     # 如果维度不匹配，使用插值对齐
+#                     tensor_resized = F.interpolate(
+#                         tensor, 
+#                         size=target_tensor.shape[2:], 
+#                         mode='bilinear', 
+#                         align_corners=False
+#                     )
+#                     target_tensor = target_tensor + tensor_resized
+            
+#             return self._process_tensor(target_tensor)
+        
+#         return self._process_tensor(x)
+    
+#     def _process_tensor(self, x):
+#         """简化的张量处理"""
+#         B, C, H, W = x.shape
+#         device = x.device
+        
+#         # 1. 池化
+#         pooled = self.avg_pool(x)
+#         flattened = pooled.view(B, C)
+        
+#         # 2. 动态线性层
+#         linear = self._get_or_create_linear(C, device)
+        
+#         # 3. 门控权重
+#         gate_weights = torch.sigmoid(linear(flattened))
+        
+#         # 4. 训练噪声
+#         if self.training:
+#             noise = torch.randn_like(gate_weights) * 0.01
+#             gate_weights = torch.clamp(gate_weights + noise, 0, 1)
+        
+#         # 5. 应用门控
+#         gate_weights = gate_weights.view(B, C, 1, 1)
+#         gated_output = x * gate_weights
+        
+#         # 6. 可学习残差连接
+#         output = torch.sigmoid(self.alpha) * gated_output + (1 - torch.sigmoid(self.alpha)) * x
+#         return output
+
+
+
+
+# class GateBlock(nn.Module):
+#     def __init__(self, temp=1.0, eps=1e-10, group_size=1):
+#         """
+#         Dynamic channel gating with Gumbel-Softmax and group-wise pooling
+
+#         Args:
+#             temp (float): Gumbel-Softmax temperature (lower = harder selection)
+#             eps (float): Small constant for numerical stability
+#             group_size (int): Number of channels per group for group-wise gating
+#         """
+#         super().__init__()
+#         self.temp = temp
+#         self.eps = eps
+#         self.group_size = group_size
+
+#         # Adaptive pooling and dynamic linear layers
+#         self.avg_pool = nn.AdaptiveAvgPool2d(1)
+#         self.linear_layers = nn.ModuleDict()
+#         self.alpha = nn.Parameter(torch.tensor(0.8))
+
+#         print("GateBlock initialized with Gumbel-Softmax and group gating")
+
+#     def _get_or_create_linear(self, channels, device):
+#         """Get or create a Linear layer for `channels` on `device`"""
+#         key = str(channels)
+#         if key not in self.linear_layers:
+#             linear = nn.Linear(channels, channels).to(device)
+#             nn.init.xavier_uniform_(linear.weight)
+#             nn.init.zeros_(linear.bias)
+#             self.linear_layers[key] = linear
+#             print(f"Created linear layer for {channels} channels")
+#         return self.linear_layers[key]
+
+#     def forward(self, x):
+#         # Handle list inputs (e.g. add fusion)
+#         if isinstance(x, list):
+#             target = x[0]
+#             for t in x[1:]:
+#                 if t.shape == target.shape:
+#                     target = target + t
+#                 else:
+#                     t_resized = F.interpolate(t, size=target.shape[2:], mode='bilinear', align_corners=False)
+#                     target = target + t_resized
+#             x = target
+#         return self._process_tensor(x)
+
+#     def _process_tensor(self, x):
+#         B, C, H, W = x.shape
+#         device = x.device
+
+#         # 1. Global feature aggregation
+#         pooled = self.avg_pool(x).view(B, C)
+
+#         # 2. Dynamic linear transformation
+#         linear = self._get_or_create_linear(C, device)
+#         logits = linear(pooled)
+
+#         # 3. Gumbel-Softmax during training, sigmoid in eval
+#         if self.training:
+#             # Sample Gumbel noise
+#             u = torch.rand_like(logits)
+#             gumbel = -torch.log(-torch.log(u + self.eps) + self.eps)
+#             gate = F.softmax((logits + gumbel) / self.temp, dim=1)
+#         else:
+#             gate = torch.sigmoid(logits)
+
+#         # 4. Group-wise pooling of gate weights if needed
+#         if self.group_size > 1 and C % self.group_size == 0:
+#             G = C // self.group_size
+#             gate = gate.view(B, G, self.group_size).mean(dim=2)  # (B, G)
+#             gate = gate.unsqueeze(2).expand(-1, -1, self.group_size).reshape(B, C)
+
+#         # 5. Broadcast and apply gating
+#         gate = gate.view(B, C, 1, 1)
+#         gated = x * gate
+
+#         # 6. Learnable residual mix
+#         alpha = torch.sigmoid(self.alpha)
+#         out = alpha * gated + (1 - alpha) * x
+#         return out
