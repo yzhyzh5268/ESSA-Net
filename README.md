@@ -1,2 +1,3 @@
 本项目基于 mujianyu/TwoStream_Yolov8 框架，通过引入脉冲神经网络（SNN）模块等多种改进策略，构建了增强型双流检测模型。在 DroneVehicle 和 LLVIP 数据集上的实验结果表明，该模型在目标检测任务中取得了显著的性能提升。
+
 This project builds upon the TwoStream_Yolov8 framework by integrating Spiking Neural Network (SNN) modules and various other enhancements. Evaluated on the DroneVehicle and LLVIP datasets, the proposed model demonstrates substantial improvements in object detection performance.
