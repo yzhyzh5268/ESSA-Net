@@ -65,10 +65,10 @@ backbone:
 
   # **仅两次新增：**
   # refine mid fused features (after ADD 24)
-  - [24, 1, EMA, [128]]  #26
+  - [24, 1, ESSA, [128]]  #26
 
   # refine top fused features (after ADD 25)
-  - [25, 1, EMA, [256]] #27
+  - [25, 1, ESSA, [256]] #27
 
 head:
   # use the refined top (27) -> upsample and fuse with refined mid (26)
