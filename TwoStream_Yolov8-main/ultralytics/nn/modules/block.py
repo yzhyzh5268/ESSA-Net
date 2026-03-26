@@ -61,7 +61,8 @@ __all__ = (
     "GateBlock",
     "ELAN",
     "C3k",
-    "C3k2"
+    "C3k2",
+    "ESSA"
 )
 class BasicConv(nn.Module):
     def __init__(self, in_planes, out_planes, kernel_size, stride=1, padding=0, dilation=1, groups=1, relu=True,
@@ -2964,7 +2965,7 @@ class Concat3(nn.Module):
 #         x1=x*y
 #         return x+torch.cat((x1[:,self.c1//2:,...],x1[:,:self.c1//2,...]),dim=1)
 
-#效果最好hao
+#效果最好hao RIFusion
 class RIFusion(nn.Module):
     def __init__(self, c1, r=16, dimension=1):
         """
@@ -4844,7 +4845,7 @@ class EnhancedSpikeAttention(nn.Module):
         return x + out * self.residual_scale.to(dtype)
 
 
-class EMA(nn.Module):
+class ESSA(nn.Module):
     def __init__(self, channels, num_heads=4, T=6):
         super().__init__()
         
