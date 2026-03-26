@@ -79,7 +79,7 @@ from .block import (
     CAFFBlock,
     CBAMk,
     GateBlock,
-    EMA,
+    ESSA,
     BiFPN,
     C3k2
 )
